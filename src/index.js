@@ -8,10 +8,6 @@ const fs = require('fs')
 
 async function verifyLinkedIssue() {
   let linkedIssue = await checkBodyForValidIssue(context, github);
-  if (!linkedIssue) {
-    linkedIssue = await checkEventsListForConnectedEvent(context, github);
-  }
-
   if (linkedIssue) {
     core.notice("Success! Linked Issue Found!");
   }
@@ -56,25 +52,6 @@ async function checkBodyForValidIssue(context, github) {
       }
     }
     return true;
-  }
-  return false;
-}
-
-async function checkEventsListForConnectedEvent(context, github) {
-  const payload = JSON.stringify(github.context.payload, undefined, 2)
-  let pull = await octokit.rest.issues.listEvents({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    issue_number: context.payload.pull_request.number
-  });
-
-  if (pull.data) {
-    pull.data.forEach(item => {
-      if (item.event == "connected") {
-        core.debug(`Found connected event.`);
-        return true;
-      }
-    });
   }
   return false;
 }
