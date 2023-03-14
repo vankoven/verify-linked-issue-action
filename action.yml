@@ -4,6 +4,12 @@ branding:
   icon: check-square
   color: green
 inputs:
+  rex:
+    description: regex to search in the pull request body
+    default: "#(.*?)[\\s]"
+  validate_issues:
+    description: Validate that the requested issues exist
+    default: "false"
   message:
     description: The text to use as the PR comment for when for pull requests with no linked issues.
   filename:

@@ -27,11 +27,16 @@ async function checkBodyForValidIssue(context, github) {
   if (!body) {
     return false;
   }
-  core.debug(`Checking PR Body: "${body}"`)
-  const re = /#(.*?)[\s]/g;
+  const re = "".concat("/", core.getInput("rex"), "/g")
+  core.debug(`Checking re "${re}" against PR Body: "${body}"`)
   const matches = body.match(re);
   core.debug(`regex matches: ${matches}`)
   if (matches) {
+    // TODO: regex may contain more than just an issue number, and issue may
+    // belong to another repo. Let the user choose skip issue check or not.
+    if (core.getInput('validate_issues') == 'false') {
+      return true;
+    }
     for (let i = 0, len = matches.length; i < len; i++) {
       let match = matches[i];
       let issueId = match.replace('#', '').trim();
