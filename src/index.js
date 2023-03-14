@@ -44,13 +44,13 @@ async function checkBodyForValidIssue(context, github) {
         });
         if (issue) {
           core.debug(`Found issue in PR Body ${issueId}`);
-          return true;
         }
       }
       catch {
         core.debug(`#${issueId} is not a valid issue.`);
       }
     }
+    return true;
   }
   return false;
 }
