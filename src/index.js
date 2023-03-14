@@ -1,4 +1,4 @@
- 
+
 const core = require('@actions/core')
 const github = require('@actions/github');
 const context = github.context;
@@ -12,42 +12,42 @@ async function verifyLinkedIssue() {
     linkedIssue = await checkEventsListForConnectedEvent(context, github);
   }
 
-  if(linkedIssue){
+  if (linkedIssue) {
     core.notice("Success! Linked Issue Found!");
   }
-  else{
-      await createMissingIssueComment(context, github);
-      core.error("No Linked Issue Found!");
-      core.setFailed("No Linked Issue Found!");
+  else {
+    await createMissingIssueComment(context, github);
+    core.error("No Linked Issue Found!");
+    core.setFailed("No Linked Issue Found!");
   }
 }
 
-async function checkBodyForValidIssue(context, github){
+async function checkBodyForValidIssue(context, github) {
   let body = context.payload.pull_request.body;
-  if (!body){
+  if (!body) {
     return false;
   }
   core.debug(`Checking PR Body: "${body}"`)
   const re = /#(.*?)[\s]/g;
   const matches = body.match(re);
   core.debug(`regex matches: ${matches}`)
-  if(matches){
-    for(let i=0,len=matches.length;i<len;i++){
+  if (matches) {
+    for (let i = 0, len = matches.length; i < len; i++) {
       let match = matches[i];
-      let issueId = match.replace('#','').trim();
+      let issueId = match.replace('#', '').trim();
       core.debug(`verifying match is a valid issue issueId: ${issueId}`)
-      try{
-        let issue = await  octokit.rest.issues.get({
+      try {
+        let issue = await octokit.rest.issues.get({
           owner: context.repo.owner,
           repo: context.repo.repo,
           issue_number: issueId,
         });
-        if(issue){
+        if (issue) {
           core.debug(`Found issue in PR Body ${issueId}`);
           return true;
         }
       }
-      catch{
+      catch {
         core.debug(`#${issueId} is not a valid issue.`);
       }
     }
@@ -55,17 +55,17 @@ async function checkBodyForValidIssue(context, github){
   return false;
 }
 
-async function checkEventsListForConnectedEvent(context, github){
+async function checkEventsListForConnectedEvent(context, github) {
   const payload = JSON.stringify(github.context.payload, undefined, 2)
   let pull = await octokit.rest.issues.listEvents({
     owner: context.repo.owner,
     repo: context.repo.repo,
-    issue_number: context.payload.pull_request.number 
+    issue_number: context.payload.pull_request.number
   });
 
-  if(pull.data){
+  if (pull.data) {
     pull.data.forEach(item => {
-      if (item.event == "connected"){
+      if (item.event == "connected") {
         core.debug(`Found connected event.`);
         return true;
       }
@@ -74,25 +74,25 @@ async function checkEventsListForConnectedEvent(context, github){
   return false;
 }
 
-async function createMissingIssueComment(context,github ) {
-  const defaultMessage =  'Build Error! No Linked Issue found. Please link an issue or mention it in the body using #<issue_id>';
+async function createMissingIssueComment(context, github) {
+  const defaultMessage = 'Build Error! No Linked Issue found. Please link an issue or mention it in the body using #<issue_id>';
   let messageBody = core.getInput('message');
-  if(!messageBody){
+  if (!messageBody) {
     let filename = core.getInput('filename');
-    if(!filename){
+    if (!filename) {
       filename = '.github/VERIFY_PR_COMMENT_TEMPLATE.md';
     }
-    messageBody=defaultMessage;
-    try{
+    messageBody = defaultMessage;
+    try {
       const file = fs.readFileSync(filename, 'utf8')
-      if(file){
+      if (file) {
         messageBody = file;
       }
-      else{
+      else {
         messageBody = defaultMessage;
       }
     }
-    catch{
+    catch {
       messageBody = defaultMessage;
     }
   }
@@ -109,14 +109,14 @@ async function createMissingIssueComment(context,github ) {
 async function run() {
 
   try {
-    if(!context.payload.pull_request){
-        core.info('Not a pull request skipping verification!');
-        return;
+    if (!context.payload.pull_request) {
+      core.info('Not a pull request skipping verification!');
+      return;
     }
 
     core.debug('Starting Linked Issue Verification!');
     await verifyLinkedIssue();
-    
+
   } catch (err) {
     core.error(`Error verifying linked issue.`)
     core.error(err)
