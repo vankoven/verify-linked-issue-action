@@ -23,24 +23,41 @@ async function checkBodyForValidIssue(context, github) {
   if (!body) {
     return false;
   }
-  const re = "".concat("/", core.getInput("rex"), "/g")
-  core.debug(`Checking re "${re}" against PR Body: "${body}"`)
+  let not_req = core.getInput('keyword_link_not_required');
+  if (not_req) {
+    const not_req_rex = new RegExp(not_req.replace(/\\/g, "\\"));
+    if (not_req_rex.test(body)) {
+      core.debug("Skipping linkage check: explicitly marked as not required to have a linkage");
+      return true;
+    }
+  }
+
+  const owner = core.getInput("owner");
+  let delim = '';
+  if (owner) {
+    delim = "/";
+  }
+  const repo = core.getInput("repo");
+  const keyword = core.getInput("keyword").replace(/\\/g, "\\");
+  const re = new RegExp(`${keyword}\\s+${owner}${delim}${repo}#(\\d+)`, "g");
+  core.debug(`Checking re "${re}" against PR Body: "${body}"`);
+
   const matches = body.match(re);
-  core.debug(`regex matches: ${matches}`)
+  core.debug(`regex matches: ${matches}`);
   if (matches) {
     // TODO: regex may contain more than just an issue number, and issue may
     // belong to another repo. Let the user choose skip issue check or not.
-    if (core.getInput('validate_issues') == 'false') {
+    if (core.getInput('validate_links') == 'false') {
       return true;
     }
     for (let i = 0, len = matches.length; i < len; i++) {
       let match = matches[i];
       let issueId = match.replace('#', '').trim();
-      core.debug(`verifying match is a valid issue issueId: ${issueId}`)
+      core.debug(`verifying match is a valid issue issueId: ${issueId}`);
       try {
         let issue = await octokit.rest.issues.get({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
+          owner: owner,
+          repo: repo,
           issue_number: issueId,
         });
         if (issue) {

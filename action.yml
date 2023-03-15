@@ -4,10 +4,18 @@ branding:
   icon: check-square
   color: green
 inputs:
-  rex:
-    description: regex to search in the pull request body
-    default: "#(.*?)[\\s]"
-  validate_issues:
+  keyword:
+    description: keyword that must present before the link
+    default: ""
+  keyword_link_not_required:
+    description: keyword that means that the linkage is not required for this PR
+  owner:
+    description: owner of the repo, used in the link
+    default: ""
+  repo:
+    description: repo, used in the link
+    default: ""
+  validate_links:
     description: Validate that the requested issues exist
     default: "false"
   message:
